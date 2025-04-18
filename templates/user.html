@@ -1,0 +1,91 @@
+{% extends "base.html" %} {% load static %} {% block content %}
+
+<div class="mx-auto w-[500px]">
+  <h1 class="text-xl font-bold mt-4 mb-8">Chat</h1>
+
+  <div>
+    <div>
+      {% if request.user.is_authenticated %}
+      <div class="flex flex-row justify-between">
+        <div>
+          welcome
+          <span class="text-blue-500 font-bold">{{request.user.username}}</span>
+        </div>
+        <a href="{% url 'logout' %}" class="text-red-500 hover:text-red-700"
+          >Logout</a
+        >
+      </div>
+
+      <div
+        style="
+          margin-top: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        "
+      >
+        {% for user in users %}
+        <a href="{% url 'chat' user.username %}" class="text-lg font-bold py-1">
+          
+          {{ user.username }}
+          <!-- <div class="">
+            {% for msg in user.send_msg.all %}
+            <div class="">{{ msg.text }}</div>
+            {% endfor %}
+          </div> -->
+        </a>
+        {% endfor %}
+
+
+        <div>
+          {% for room in rooms %}
+            {% with room.messages.last as msg %}
+              {% if msg %}
+                <div class="text-xl font-bold">{{ msg.author.username }}</div>
+                <div class="text-sm text-gray-500">{{ msg.text }}</div>
+              {% endif %}
+            {% endwith %}
+          {% endfor %}
+        </div>
+      </div>
+
+      {% else %}
+    </div>
+    <div>
+      you are not logged in...
+      <a href="{% url 'login' %}" class="text-blue-500 font-bold">Login</a>
+    </div>
+
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  const username = "{{me.username}}";
+
+  let ws;
+
+  if (new WebSocket(`ws://localhost:8000/ws/messages/${username}/`)) {
+    ws = new WebSocket(`ws://localhost:8000/ws/messages/${username}/`);
+  } else {
+    ws = new WebSocket(`ws://192.168.1.6:8000/ws/messages/${username}/`);
+  }
+
+  ws.onopen = (e) => {
+    console.log(e, "connected...");
+  };
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+  };
+
+  ws.onclose = () => {
+    console.log("Closed.");
+  };
+
+  ws.onerror = (e) => {
+    console.log("Error", e);
+  };
+</script>
+
+{% endblock content %}

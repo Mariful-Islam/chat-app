@@ -1,0 +1,177 @@
+{% extends "base.html" %} {% load static %} {% block content %}
+<style>
+  #chat_list{
+    height: 80vh;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  
+  }
+  .message-meta {
+
+  }
+
+  .message-item {
+    background-color: #f0f0f0;
+    border-radius: 12px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 6px;
+    padding-top: 6px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+</style>
+
+
+<div class="w-[500px] mx-auto">
+  <h1>Chat</h1>
+
+  <div>
+    <div class="bg-slate-100 px-6 py-2 ">{{ receiver }}</div>
+    <div id="chat_list" >
+
+      {% for msg in messages %}
+        <div class="message-item">
+          <div class="flex flex-row justify-between item-center">
+            <div class="message-meta">
+              {% if msg.author == request.user %}
+              <strong class="text-sm text-gray-500">You</strong>
+              {% else %}
+              <strong class="text-sm text-gray-500">{{msg.author}}</strong>
+              {% endif %}
+            </div>
+            <div>
+              <a href="{% url 'chat_delete_one_by_one' room_name msg.id %}" class="text-red-500">Delete</a>
+            </div>
+          </div>
+
+          <div class="message-body">
+            {{msg.text}}
+          </div>
+        </div>
+      {% endfor %}
+
+    </div>
+    <div class="absolute bottom-4">
+      <form id="textForm">
+        <input id="message" name="message" placeholder="type message" class="px-3 py-1 rounded-md border-1 border-blue-500 outline-blue-500" />
+        <button type="submit" class="bg-blue-500 px-4 py-1 rounded-md hover:bg-blue-700 duration-200 text-white">send</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const name = "{{ room_name }}";
+
+  let ws
+
+  if (new WebSocket(`ws://localhost:8000/ws/chat/${name}/`)){
+    ws = new WebSocket(`ws://localhost:8000/ws/chat/${name}/`)
+  }else{
+    ws = new WebSocket(`ws://192.168.1.6:8000/ws/chat/${name}/`)
+  }
+
+
+
+  ws.onopen = (e) => {
+    console.log("Connected.", e);
+  };
+
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    console.log(data, "data recived");
+    const message = data.message;
+    const sender = data.sender
+    const receiver = data.receiver
+  
+
+    console.log("Broadcast received:", message);
+
+    const chatList = document.getElementById("chat_list")
+
+    const chatBox = document.createElement('div')
+    chatBox.classList.add("chat-message");
+
+    // Add the content
+    chatBox.innerHTML = `
+      <div class="message-item">
+        <div class="message-meta">
+          <strong class="text-sm text-gray-500">${sender === "{{request.user.username}}" ? 'you' : sender}</strong>
+        </div>
+        <div class="message-body">
+          ${message}
+        </div>
+      </div>
+    `;
+
+    chatList.appendChild(chatBox);
+
+    chatList.scrollTo({
+      top: chatList.scrollHeight
+    });
+  };
+
+  ws.onclose = () => {
+    console.log("Closed.");
+  };
+
+  ws.onerror = (e) => {
+    console.log("Error", e);
+  };
+
+  const form = document.getElementById("textForm");
+  const input = document.getElementById("message")
+
+  const sn = new WebSocket(`ws://localhost:8000/ws/messages/${"{{receiver}}"}/`)
+
+  sn.onopen = (e) => {
+    console.log('COnnected reatime message notification.')
+  }
+
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    ws.send(JSON.stringify({
+      message: e.target.message.value,
+      sender: "{{request.user.username}}",
+      receiver: "{{receiver}}",
+
+    }))
+
+    sn.send(JSON.stringify({
+      message: e.target.message.value,
+      sender: "{{request.user.username}}",
+      receiver: "{{receiver}}",
+    }))
+
+    input.value = ''
+
+  });
+
+
+
+
+  window.onload = () => {
+    const chat = document.getElementById('chat_list')
+    chat.scrollTop = chat.scrollHeight
+
+    chat.scrollTo({
+      top: chat.scrollHeight,
+      behavior: 'auto'
+    });
+  }
+
+
+
+
+
+
+
+
+
+</script> 
+
+{% endblock %}

@@ -1,0 +1,24 @@
+
+{% extends "base.html" %} {% load static %} {% block content %}
+
+<div class="mx-auto w-[500px]">
+  <h1>Singup</h1>
+
+  <div>
+    <div></div>
+    <div class="mt-12">
+      <form id="textForm" method='post'>
+        {% csrf_token %}
+        <input id="username" name="username" placeholder="type username" class="px-3 py-1 rounded-md border-1 border-blue-500 outline-blue-500" />
+        <input id="password" name="password" placeholder="type password" class="mt-4 px-3 py-1 rounded-md border-1 border-blue-500 outline-blue-500" />
+        <br>
+        <button type="submit" class="mt-6 bg-blue-500 px-4 py-1 rounded-md hover:bg-blue-700 duration-200 text-white">Sign up</button>
+      </form>
+
+      <div class="mt-12">if your have no account go to <a href="{% url 'login' %}" class="underline text-blue-500">login</a> </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock content %}
