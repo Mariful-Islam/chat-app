@@ -62,7 +62,15 @@ def signup(request):
 def user_list(request):
     users = User.objects.all().exclude(id = request.user.id)
 
+    other_users = []
+
     rooms = Room.objects.filter(members=request.user)
+
+    for room in rooms:
+        other_users.append(room.members.exclude(id=request.user.id))
+
+    print(other_users, "-----------")
+
 
     return render(request, 'user.html', {"users": users, "me": request.user, "rooms": rooms})
 

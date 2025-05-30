@@ -41,11 +41,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         receiver_user = await self.get_user_by_username(receiver_username)
 
 
-        await self.save_message(sender_user, message)
+        message_instance = await self.save_message(sender_user, message)
 
         await self.channel_layer.group_send(self.room_group_name, {
             "type": "send_message",
-            "message": message,
+            "message": message_instance.text,
+            "message_id": message_instance.pk,
             "sender": sender_username,
             "receiver": receiver_username
         })
@@ -55,12 +56,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         print(e, "0000000000")
         message = e['message']
+        message_id = e['message_id']
         sender = e['sender']
         receiver = e['receiver']
 
 
-        await self.send(text_data=json.dumps({"message": message, "sender": sender, "receiver": receiver}))
-    
+        await self.send(text_data=json.dumps({
+            "message": message,
+            "message_id":message_id,  
+            "sender": sender, 
+            "receiver": receiver
+            }))
+
+        
 
 
     @database_sync_to_async
@@ -77,6 +85,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         print(author, "autor")
         message = Message(room=room, author=author, text=text)
         message.save()
+        
         return message
     
 
