@@ -1,16 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat app</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    
-</head>
-<body>
-    {% block content %}
+  </head>
+  <body>
+    <div class="bg-gray-200 h-screen">
+      <div class="max-w-[1200px] mx-auto flex gap-4">
+        <!-- user list section -->
+        <div class="min-w-[250px] bg-white pt-10 px-2 h-screen">
+          <a href="{% url 'logout' %}" class="px-6 mb-4">Logout</a>
+          <ul class="w-full flex flex-col gap-2 mt-4">
+            {% for user in users %} {% url 'chat' user.username as chat_room %}
+            <li class="w-full">
+              <a
+                href="{{chat_room}}"
+                class="text-lg font-bold py-2 px-4 rounded-md duration-150 hover:bg-gray-200 flex w-full {% if first_user == user.username or second_user == user.username %} bg-gray-300 {% else %} bg-white hover:bg-gray-200 {% endif %}"
+              >
+                {{ user.username }}
+                <!-- <div class="">
+                {% for msg in user.send_msg.all %}
+                <div class="">{{ msg.text }}</div>
+                {% endfor %}
+              </div> -->
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
 
-
-    {% endblock %}
-</body>
+        {% block content %}
+        <div class="bg-white h-screen w-full p-6 flex flex-col justify-center items-center">
+          <div class="text-blue-500 text-2xl">welcome to realtime chat application</div>
+          <div class="text-blue-500 text-5xl">{{request.user.username}}</div>
+        </div>
+        {% endblock %}
+      </div>
+    </div>
+  </body>
 </html>

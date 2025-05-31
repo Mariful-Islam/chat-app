@@ -1,23 +1,51 @@
+{% load static %} {% block content %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat app</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <div class="mx-auto w-[500px]">
+      <h1>Login</h1>
 
-{% extends "base.html" %} {% load static %} {% block content %}
-
-<div class="mx-auto w-[500px]">
-  <h1>Login</h1>
-
-  <div>
-    <div></div>
-    <div class="mt-12">
-      <form id="textForm" method='post'>
-        {% csrf_token %}
-        <input id="username" name="username" placeholder="type username" class="px-3 py-1 rounded-md border-1 border-blue-500 outline-blue-500" />
-        <input id="password" name="password" placeholder="type password" class="mt-4 px-3 py-1 rounded-md border-1 border-blue-500 outline-blue-500" />
-        <br>
-        <button type="submit" class="mt-6 bg-blue-500 px-4 py-1 rounded-md hover:bg-blue-700 duration-200 text-white">Login </button>
-      </form>
-      <div class="mt-12">if your have no account go to <a href="{% url 'signup' %}" class="underline text-blue-500">signup</a> </div>
+      <div>
+        <div></div>
+        <div class="mt-12">
+          <form id="textForm" method="post">
+            {% csrf_token %}
+            <input
+              id="username"
+              name="username"
+              placeholder="type username"
+              class="px-3 py-1 rounded-md border-1 border-blue-500 outline-blue-500"
+            />
+            <input
+              id="password"
+              name="password"
+              placeholder="type password"
+              class="mt-4 px-3 py-1 rounded-md border-1 border-blue-500 outline-blue-500"
+            />
+            <br />
+            <button
+              type="submit"
+              class="mt-6 bg-blue-500 px-4 py-1 rounded-md hover:bg-blue-700 duration-200 text-white"
+            >
+              Login
+            </button>
+          </form>
+          <div class="mt-12">
+            if your have no account go to
+            <a href="{% url 'signup' %}" class="underline text-blue-500"
+              >signup</a
+            >
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+  </body>
 
-
-{% endblock content %}
+  {% endblock content %}
+</html>

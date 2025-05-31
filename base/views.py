@@ -72,7 +72,7 @@ def user_list(request):
     print(other_users, "-----------")
 
 
-    return render(request, 'user.html', {"users": users, "me": request.user, "rooms": rooms})
+    return render(request, 'base.html', {"users": users, "me": request.user, "rooms": rooms})
 
 
 
@@ -108,10 +108,21 @@ def chat_room(request, room_name):
 
     other_user = room.members.exclude(id=request.user.id)[0]
 
+    users = User.objects.exclude(id=request.user.id)
+
     messages = Message.objects.filter(room=room)
 
+    first_user = request.path.split("/")[3].split("_")[1]
+    second_user = request.path.split("/")[3].split("_")[2]
 
-    return render(request, 'chat.html', {"room_name": room_name, "receiver": other_user.username, "messages": messages })
+
+    return render(request, 'chat.html', {
+        "room_name": room_name, 
+        "receiver": other_user.username, 
+        "messages": messages, 
+        "users": users, 
+        "first_user": first_user, 
+        "second_user": second_user })
 
 
 
@@ -131,6 +142,8 @@ def chat_delete_one_by_one(request, room_name, message_id):
     messages.delete()
 
     return redirect('chat_room', room_name)
+
+
 
 
 def logout(request):

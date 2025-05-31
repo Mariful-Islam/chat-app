@@ -1,13 +1,11 @@
 {% extends "base.html" %} {% load static %} {% block content %}
 <style>
-  #chat_list{
+  #chat_list {
     height: 80vh;
     overflow-y: auto;
     scroll-behavior: smooth;
-  
   }
   .message-meta {
-
   }
 
   .message-item {
@@ -20,43 +18,80 @@
     margin-top: 8px;
     margin-bottom: 8px;
   }
-
 </style>
 
-
-<div class="w-[500px] mx-auto">
-  <h1>Chat</h1>
-
-  <div>
-    <div class="bg-slate-100 px-6 py-2 ">{{ receiver }}</div>
-    <div id="chat_list" >
-
+<div class="w-full bg-white mx-auto">
+  <div class="relative h-screen px-6 py-4 w-full border-box">
+    <div class="bg-slate-100 px-6 py-2">{{ receiver }}</div>
+    <div id="chat_list">
       {% for msg in messages %}
-        <div class="message-item">
-          <div class="flex flex-row justify-between item-center">
-            <div class="message-meta">
-              {% if msg.author == request.user %}
-              <strong class="text-sm text-gray-500">You</strong>
-              {% else %}
-              <strong class="text-sm text-gray-500">{{msg.author}}</strong>
-              {% endif %}
-            </div>
-            <div>
-              <a href="{% url 'chat_delete_one_by_one' room_name msg.id %}" class="text-red-500">Delete</a>
-            </div>
+      <div class="message-item" id="message-{{msg.id}}">
+        <div class="flex flex-row justify-between item-center">
+          <div class="message-meta">
+            {% if msg.author == request.user %}
+            <strong class="text-sm text-gray-500">You</strong>
+            {% else %}
+            <strong class="text-sm text-gray-500">{{msg.author}}</strong>
+            {% endif %}
           </div>
-
-          <div class="message-body">
-            {{msg.text}}
+          <div>
+            <button onclick="deleteMsg('{{msg.id}}')" class="text-red-500">
+              Delete
+            </button>
           </div>
         </div>
-      {% endfor %}
 
+        <div class="message-body">{{msg.text}}</div>
+      </div>
+      {% endfor %}
     </div>
-    <div class="absolute bottom-4">
-      <form id="textForm">
-        <input id="message" name="message" placeholder="type message" class="px-3 py-1 rounded-md border-1 border-blue-500 outline-blue-500" />
-        <button type="submit" class="bg-blue-500 px-4 py-1 rounded-md hover:bg-blue-700 duration-200 text-white">send</button>
+    <div class="absolute bottom-4 left-0 right-0">
+      <form id="textForm" class="w-full flex gap-4 px-6">
+        <button class="">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"
+            />
+          </svg>
+        </button>
+
+        <input
+          id="message"
+          name="message"
+          placeholder="type message"
+          class="w-full px-4 py-2 rounded-md border-1 border-blue-500 outline-blue-500"
+        />
+
+        <button
+          id="submit"
+          disabled
+          type="submit"
+          class="bg-blue-500 px-3 py-2 rounded-md hover:bg-blue-700 duration-200 text-white"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m8.25 4.5 7.5 7.5-7.5 7.5"
+            />
+          </svg>
+        </button>
       </form>
     </div>
   </div>
@@ -65,63 +100,68 @@
 <script>
   const name = "{{ room_name }}";
 
-  let ws
+  let ws;
 
-  if (new WebSocket(`ws://localhost:8000/ws/chat/${name}/`)){
-    ws = new WebSocket(`ws://localhost:8000/ws/chat/${name}/`)
-  }else{
-    ws = new WebSocket(`ws://192.168.1.6:8000/ws/chat/${name}/`)
+  if (new WebSocket(`ws://localhost:8000/ws/chat/${name}/`)) {
+    ws = new WebSocket(`ws://localhost:8000/ws/chat/${name}/`);
+  } else {
+    ws = new WebSocket(`ws://192.168.1.6:8000/ws/chat/${name}/`);
   }
-
-
 
   ws.onopen = (e) => {
     console.log("Connected.", e);
   };
 
-
   ws.onmessage = (e) => {
     const data = JSON.parse(e.data);
-    console.log(data, "data recived");
+
     const message = data.message;
-    const sender = data.sender
-    const receiver = data.receiver
-    const message_id = data.message_id
+    const sender = data.sender;
+    const receiver = data.receiver;
+    const message_id = data.message_id;
 
-    const messageDeleteUrl = `/chat_delete_one_by_one/${name}/${message_id}/`
+    if (data.action === "send") {
+      const messageDeleteUrl = `/chat_delete_one_by_one/${name}/${message_id}/`;
 
+      const chatList = document.getElementById("chat_list");
 
-    console.log("Broadcast received:", message);
+      const chatBox = document.createElement("div");
+      chatBox.classList.add("message-item");
+      chatBox.id = `message-${message_id}`;
+      
 
-    const chatList = document.getElementById("chat_list")
-
-    const chatBox = document.createElement('div')
-    chatBox.classList.add("chat-message");
-
-    // Add the content
-    chatBox.innerHTML = `
-      <div class="message-item">
+      // Add the content
+      chatBox.innerHTML = `
         <div class="flex flex-row justify-between item-center">
           <div class="message-meta">
-            <strong class="text-sm text-gray-500">${sender === "{{request.user.username}}" ? 'you' : sender}</strong>
+            <strong class="text-sm text-gray-500">${
+              sender === "{{request.user.username}}" ? "You" : sender
+            }</strong>
           </div>
           
           <div>
-            <a href=${messageDeleteUrl} class="text-red-500">Delete</a>
+            <button onclick="deleteMsg('${message_id}')}" class="text-red-500">Delete</button>
           </div>
         </div>
         
         <div class="message-body">
           ${message}
         </div>
-      </div>
-    `;
+    `
 
-    chatList.appendChild(chatBox);
+      chatList.appendChild(chatBox);
 
-    chatList.scrollTo({
-      top: chatList.scrollHeight
-    });
+      chatList.scrollTo({
+        top: chatList.scrollHeight,
+      });
+    } else if (data.action === "delete") {
+      const messageElement = document.getElementById(
+        `message-${data.message_id}`
+      );
+      if (messageElement) {
+        messageElement.remove();
+      }
+    }
   };
 
   ws.onclose = () => {
@@ -133,55 +173,75 @@
   };
 
   const form = document.getElementById("textForm");
-  const input = document.getElementById("message")
+  const input = document.getElementById("message");
 
-  const sn = new WebSocket(`ws://localhost:8000/ws/messages/${"{{receiver}}"}/`)
+  const submit = document.getElementById("submit");
+
+  const fetchMessages = async () => {
+    const res = await fetch(`http://127.0.0.1:8000/api/chat/room/${name}/`);
+    const data = await res.json();
+    console.log(data);
+  };
+
+
+  const deleteMsg = (id) => {
+    ws.send(
+      JSON.stringify({
+        action: "delete",
+        message_id: id,
+      })
+    );
+  };
+
+
+  input.addEventListener("input", () => {
+    console.log(input.value.trim().length);
+    if (input.value.trim().length === 0) {
+      submit.disabled = true;
+    } else {
+      submit.disabled = false;
+    }
+  });
+
+  const sn = new WebSocket(
+    `ws://localhost:8000/ws/messages/${"{{receiver}}"}/`
+  );
 
   sn.onopen = (e) => {
-    console.log('COnnected reatime message notification.')
-  }
-
+    console.log("COnnected reatime message notification.");
+  };
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    ws.send(JSON.stringify({
-      message: e.target.message.value,
-      sender: "{{request.user.username}}",
-      receiver: "{{receiver}}",
+    ws.send(
+      JSON.stringify({
+        action: "send",
+        message: e.target.message.value,
+        sender: "{{request.user.username}}",
+        receiver: "{{receiver}}",
+      })
+    );
 
-    }))
+    sn.send(
+      JSON.stringify({
+        message: e.target.message.value,
+        sender: "{{request.user.username}}",
+        receiver: "{{receiver}}",
+      })
+    );
 
-    sn.send(JSON.stringify({
-      message: e.target.message.value,
-      sender: "{{request.user.username}}",
-      receiver: "{{receiver}}",
-    }))
-
-    input.value = ''
-
+    input.value = "";
   });
 
-
-
-
   window.onload = () => {
-    const chat = document.getElementById('chat_list')
-    chat.scrollTop = chat.scrollHeight
+    const chat = document.getElementById("chat_list");
+    chat.scrollTop = chat.scrollHeight;
 
     chat.scrollTo({
       top: chat.scrollHeight,
-      behavior: 'auto'
+      behavior: "auto",
     });
-  }
-
-
-
-
-
-
-
-
-
-</script> 
+  };
+</script>
 
 {% endblock %}

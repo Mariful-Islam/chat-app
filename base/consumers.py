@@ -30,11 +30,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
     
     async def receive(self, text_data=None, bytes_data=None):
-        text = json.loads(text_data)
+        data = json.loads(text_data)
 
-        message = text['message']
-        sender_username = text['sender']
-        receiver_username = text['receiver']
+        action = data.get('action')
+
+        if action == "send":
+            await self.handle_send_message(data)
+            print('send')
+        elif action == "delete":
+            await self.handle_delete_message(data)
+            print('delete')
+
+
+    async def handle_send_message(self, data):
+
+        message = data['message']
+        sender_username = data['sender']
+        receiver_username = data['receiver']
 
         sender_user = await self.get_user_by_username(sender_username)
 
@@ -54,7 +66,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def send_message(self, e):
 
-        print(e, "0000000000")
         message = e['message']
         message_id = e['message_id']
         sender = e['sender']
@@ -62,6 +73,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 
         await self.send(text_data=json.dumps({
+            "action": "send",
             "message": message,
             "message_id":message_id,  
             "sender": sender, 
@@ -88,6 +100,33 @@ class ChatConsumer(AsyncWebsocketConsumer):
         
         return message
     
+
+
+
+    async def handle_delete_message(self, data):
+        message_id = data['message_id']
+        
+        await self.delete_message_from_db(message_id)
+
+        # message_instance = Message.objects.get(id=message_id)
+        await self.channel_layer.group_send(self.room_group_name, {
+            'type': 'delete_message',
+            'message_id': message_id
+        })
+
+    async def delete_message(self, e):
+        message_id = e['message_id']
+
+        await self.send(text_data=json.dumps({
+            'action': 'delete',
+            'message_id': message_id
+        }))
+
+    @database_sync_to_async
+    def delete_message_from_db(self, id):
+        Message.objects.get(id=id).delete()
+
+
 
 
 class UserMessageConsumer(AsyncWebsocketConsumer):

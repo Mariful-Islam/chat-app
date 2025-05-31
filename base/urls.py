@@ -1,7 +1,6 @@
 from django.urls import path
 from . import views
-# from api.urls import api_urls
-
+from base.api.urls import api_urlpatterns
 
 
 urlpatterns = [
@@ -20,6 +19,5 @@ urlpatterns = [
     path('chat_delete_one_by_one/<str:room_name>/<int:message_id>/', views.chat_delete_one_by_one, name='chat_delete_one_by_one'),
 
 
-]
-
+]+api_urlpatterns
 
